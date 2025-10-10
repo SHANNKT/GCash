@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCash Flow Simulation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* [NA-OMIT ANG CSS PARA MAIKLI, PERO HINDI ITO BINAGO] */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+            background-color: #eee;
+        }
+
+        .status-bar { display: none; }
+
+        .screen-container {
+            width: 100vw;
+            max-width: 500px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0 auto;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* --- 1. PINK INITIAL SCREEN STYLES --- */
+        .pink-screen {
+            background: linear-gradient(to bottom, #e2a7a6 10%, #FF90BB 100%);
+        }
+
+        .gcash-logo {
+            width: 60px;
+            height: 60px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .brand p {
+            font-size: 3rem;
+            font-weight: 600;
+            opacity: 0.95;
+            margin: 20px 0;
+            color: #E03C62;
+        }
+
+        .header {
+            text-align: center;
+            padding-top: 20px;
+        }
+        .promo-text {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .phone-number-box {
+            background-color: rgba(255, 255, 255, 0.4);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .phone-number-box p {
+            font-size: 1.4rem;
+        }
+
+        /* Placeholder for Gift/Cat image */
+        .pink-screen .image-placeholder {
+            width: 80%;
+            height: 250px;
+            margin-top: 30px;
+            background-color: #f7a4bf;
+            border-radius: 20px;
+            position: relative;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        /* Para magmukhang naka-patong ang MPIN Login */
+        .mpin-login-btn-area {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-align: center;
+        }
+        .mpin-login-button {
+            background-color: white;
+            color: #E03C62;
+            border: none;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .mpin-login-button span {
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            margin-bottom: 5px;
+            color: #E03C62;
+        }
+
+        /* Footer Links */
+        .login-footer-links {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            position: absolute;
+            bottom: 30px;
+        }
+        .login-footer-links a {
+            color: white;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        /* --- 2. MPIN KEYPAD SCREEN STYLES (Blue) --- */
+        .blue-keypad-screen {
+            background: linear-gradient(to bottom, #e2a7a6 10%, #FF90BB 100%);
+            justify-content:flex-start;
+            padding-top:50px;
+        }
+        .mpin-input-area {
+            text-align: center;
+            width: 100%;
+        }
+        .mpin-input-area p {
+             font-size: 1.2rem;
+        }
+        .pin-dots {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0 50px;
+        }
+        .dot {
+            width: 18px;
+            height: 18px;
+            border: 3px solid white;
+            border-radius: 50%;
+            background-color: transparent;
+            transition: background-color 0.1s;
+        }
+        .dot.filled {
+            background-color: white;
+            border: none;
+        }
+
+        /* Keypad Styles */
+        .keypad {
+            background-color: transparent;
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 0;
+            margin-top: auto;
+        }
+        .key-row {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px 0;
+        }
+        .key-row span {
+            color: white;
+            font-size: 32px;
+            font-weight: 400;
+            width: 33%;
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            transition: background-color 0.1s;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            user-select: none;
+        }
+        .key-row span.empty-key {
+            opacity: 0;
+            cursor: default;
+        }
+        #backspace-key {
+            font-size: 1.8rem;
+            opacity: 1;
+            color: white;
+            text-shadow: none;
+        }
+
+        /* --- 3. HOME SCREEN STYLES (White/Blue) --- */
+        .home-screen {
+            background-color: #F8F9FA;
+            color: black;
+            width: 100vw;
+            min-height: 100vh;
+            padding: 0;
+            justify-content: flex-start;
+        }
+        .home-header {
+            width: 100%;
+            background-color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .home-header-left {
+             display: flex;
+             align-items: center;
+             gap: 8px;
+             color: #E03C62;
+             font-size: 1.2rem;
+             font-weight: bold;
+        }
+        .home-header-left img {
+             width: 25px;
+             height: 25px;
+             filter: none;
+        }
+        .home-header a {
+             color: white;
+             background-color: #E03C62;
+             text-decoration: none;
+             font-weight: bold;
+             padding: 5px 10px;
+             border-radius: 20px;
+             font-size: 0.8rem;
+        }
+
+        .pay-it-win-it {
+             background-color: #F7CAC9;
+             color: #E03C62;
+             text-align: center;
+             padding: 5px 0;
+             font-size: 0.8rem;
+             font-weight: bold;
+             width: 100%;
+             position: sticky;
+             top: 55px;
+             z-index: 50;
+        }
+        .pay-it-win-it span {
+             background-color: white;
+             padding: 2px 5px;
+             border-radius: 10px;
+             font-size: 0.7rem;
+             color: black;
+        }
+
+        /* Wallet/Save/Borrow/Grow Tabs */
+        .top-tabs {
+            background-color: white;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 0 10px;
+            color: gray;
+            position: sticky;
+            top: 80px;
+            z-index: 50;
+        }
+        .top-tabs div {
+             text-align: center;
+             width: 25%;
+             font-size: 0.9rem;
+             font-weight: bold;
+             padding: 10px 0 5px;
+             cursor: pointer;
+        }
+        .top-tabs div.active-tab {
+             color: #E03C62;
+             border-bottom: 3px solid #E03C62;
+        }
+
+        /* --- Tab Content Styles --- */
+        .tab-content {
+            width: 100%;
+            padding: 0 0px;
+            flex-grow: 1;
+        }
+
+        /* General Balance Card */
+        .balance-card-container {
+             background-color: white;
+             width: 100%;
+             max-width: 500px;
+             padding-bottom: 10px;
+        }
+        .balance-card {
+            background: linear-gradient(to bottom, #e2a7a6 10%, #FF90BB 100%);
+            width: 90%;
+            max-width: 450px;
+            margin: 20px auto 10px;
+            border-radius: 15px;
+            color: white;
+            padding: 15px 20px;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: block;
+        }
+        .balance-card .balance-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        .balance-card button {
+            float: right;
+            background-color: white;
+            color: #F7CAC9;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .balance-card h4 {
+            color: black;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .balance-card .savings-item {
+             display: flex;
+             align-items: center;
+             color: #F7CAC9;
+             font-weight: bold;
+             margin-top: 10px;
+             cursor: pointer;
+             gap: 10px;
+             padding: 0 20px;
+        }
+        .balance-card .savings-item span {
+             font-size: 2rem;
+        }
+
+
+        /* Services Grid */
+        .services-grid {
+            width: 90%;
+            max-width: 450px;
+            margin: 10px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            background-color: white;
+            padding: 5px 0;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .service-item {
+            width: 25%;
+            text-align: center;
+            padding: 10px 0px;
+            font-size: 0.75rem;
+            color: #555;
+            cursor: pointer;
+        }
+        .service-item img {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 5px;
+        }
+        .service-item .icon-placeholder {
+             width: 40px;
+             height: 40px;
+             background-color: #f0f0f0;
+             border-radius: 50%;
+             margin: 0 auto 5px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             font-size: 1.5rem;
+             color: #E03C62;
+        }
+
+
+        /* Explore the App Section */
+        .explore-header {
+            width: 90%;
+            max-width: 450px;
+            margin: 10px auto 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .explore-header h4 {
+             color: #555;
+             margin: 0;
+        }
+        .explore-header a {
+             color: #E03C62;
+             text-decoration: none;
+             font-weight: bold;
+             font-size: 0.9rem;
+        }
+
+        .explore-grid {
+            width: 90%;
+            max-width: 450px;
+            text-align: left;
+            margin: 0px auto 80px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: flex-start;
+            overflow-x: auto;
+        }
+        .explore-item {
+             text-align: center;
+             padding: 10px;
+             font-size: 0.8rem;
+             color: #555;
+             min-width: 80px;
+        }
+        .explore-item img {
+             width: 40px;
+             height: 40px;
+             margin-bottom: 5px;
+        }
+        /* Promo label for Travel */
+        .promo-label {
+            position: absolute;
+            top: 5px;
+            right: 0px;
+            background-color: red;
+            color: white;
+            font-size: 8px;
+            padding: 2px 4px;
+            border-radius: 5px;
+            font-weight: bold;
+            transform: rotate(5deg);
+        }
+        /* SMS Scam Banner Style */
+        .scam-banner {
+             width: 90%;
+             max-width: 450px;
+             margin: 10px auto 80px;
+             padding: 15px;
+             background-color: white;
+             border-radius: 15px;
+             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+             text-align: left;
+        }
+
+        /* --- QR Reader Screen --- */
+        .qr-reader-screen {
+            background-color: black;
+            justify-content: flex-start;
+            padding: 0;
+        }
+        .qr-header {
+             width: 100%;
+             color: white;
+             display: flex;
+             justify-content: space-between;
+             padding: 15px 20px;
+             font-size: 1.2rem;
+        }
+        .qr-box {
+             width: 80%;
+             height: 50vh;
+             margin: 30px auto;
+             border: 2px dashed rgba(255, 255, 255, 0.5);
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             color: gray;
+        }
+        .qr-actions {
+             display: flex;
+             justify-content: space-around;
+             width: 100%;
+             margin: 20px 0;
+             color: white;
+             font-size: 0.9rem;
+        }
+        .qr-action-item {
+             text-align: center;
+             cursor: pointer;
+        }
+        .qr-action-item i {
+             font-size: 2rem;
+             margin-bottom: 5px;
+             color: white;
+        }
+        .pay-abroad-box {
+             background-color: white;
+             color: black;
+             border-radius: 20px;
+             padding: 10px 15px;
+             margin-top: 20px;
+             font-weight: bold;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             cursor: pointer;
+        }
+        .pay-abroad-box img {
+             width: 30px;
+             height: 20px;
+             margin: 0 5px;
+        }
+        .country-flags {
+             display: flex;
+             justify-content: center;
+             gap: 10px;
+             margin-top: 15px;
+        }
+        .country-flags img {
+             width: 30px;
+             height: 20px;
+             border: 1px solid white;
+             border-radius: 3px;
+        }
+
+        /* Bottom Navigation Bar (Fixed) */
+
+        .nav-bar {
+            width: 100%;
+            max-width: 500px;
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: space-around;
+            background-color: white;
+            border-top: 1px solid #ddd;
+            padding: 10px 0;
+            z-index: 9999;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-bar a {
+            text-decoration: none;
+        }
+
+        .nav-item {
+            color: gray;
+            text-decoration: none;
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            color: #E03C62;
+            transform: scale(1.05);
+        }
+
+        .nav-item i {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active i {
+            color: #E03C62;
+        }
+
+        /* QR Button on Nav Bar (Bigger, like the image) */
+        .nav-item.qr-button {
+            transform: translateY(-5px);
+            background-color: white;
+            border-radius: 50%;
+            padding: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.qr-button i {
+            color: #E03C62;
+            font-size: 30px;
+        }
+
+        /* --- PLACEHOLDER SCREEN STYLES (NEW) --- */
+        .placeholder-screen {
+            background-color: #F8F9FA;
+            color: #555;
+            width: 100vw;
+            min-height: 100vh;
+            padding-top: 50px;
+            padding-bottom: 80px;
+            justify-content: center;
+        }
+        .placeholder-screen h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #E03C62;
+            margin-bottom: 10px;
+        }
+        .placeholder-screen p {
+            font-size: 1rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="screen-container pink-screen" id="initial-login-screen">
+        <div class="header">
+            <p class="promo-text">Kejutan Ulang Tahun</p>
+            <h1>Goyangkan</h1>
+        </div>
+
+        <div class="brand">
+            <img src="kit.png" alt="GCash Logo" class="gcash-logo">
+            <p style="font-size: 3rem; margin: 0; font-weight: 500;">GCash</p>
+        </div>
+        <div class="phone-number-box">
+            <p>+63-9814766012</p>
+        </div>
+
+        <div class="image-container">
+            <img src="logo3d-removebg-preview.png" alt="3D GCash Surprise Birthday Image">
+        </div>
+
+        <div class="mpin-login-btn-area">
+            <button class="mpin-login-button" id="open-mpin-keypad">
+                <span>•••</span>
+                MPIN Login
+            </button>
+        </div>
+
+        <div class="login-footer-links">
+            <a href="#">Help Center</a>
+            <a href="#">Forgot MPIN?</a>
+        </div>
+    </div>
+
+    <div class="screen-container blue-keypad-screen" id="mpin-keypad-screen" style="display: none;">
+        <div class="header" style="color: white; text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);">
+            <p class="promo-text" style="font-size: 1.5rem; font-weight: 500;">Kejutan Ulang Tahun</p>
+            <h1 style="font-size: 2.5rem; margin-bottom: 20px;">Goyangkan</h1>
+
+            <div class="brand" style="margin: 0; margin-bottom: 20px;">
+                <img src="kit.png" alt="GCash Logo" class="gcash-logo">
+                <p style="font-size: 3rem; margin: 0; font-weight: 500;">GCash</p>
+            </div>
+            <div class="phone-number-box" style="background: rgba(255, 255, 255, 0.3); margin-bottom: 0; padding: 10px 20px;">
+                <p>+63-9814766012 <i class="fas fa-sync-alt" style="font-size: 0.9rem;"></i></p>
+            </div>
+        </div>
+
+        <div class="mpin-input-area" style="margin-top: 50px;">
+            <p id="mpin-prompt">Enter your MPIN</p>
+            <div class="pin-dots" id="pin-dots">
+                <div class="dot" data-index="0"></div>
+                <div class="dot" data-index="1"></div>
+                <div class="dot" data-index="2"></div>
+                <div class="dot" data-index="3"></div>
+            </div>
+            <div style="width: 100%; height: 150px; background-color: transparent; margin-top: -50px; position: relative;">
+                <p style="color: rgba(255, 255, 255, 0.3); font-size: 10px;">[Placeholder for Gift/Phone Image]</p>
+            </div>
+            <p style="font-size: 15px; opacity: 0.9;">Never share your MPIN or OTP with anyone.</p>
+        </div>
+
+        <div class="keypad" id="keypad">
+            <div class="key-row"><span>1</span><span>2</span><span>3</span></div>
+            <div class="key-row"><span>4</span><span>5</span><span>6</span></div>
+            <div class="key-row"><span>7</span><span>8</span><span>9</span></div>
+            <div class="key-row"><span class="empty-key"></span><span>0</span><span id="backspace-key"><i class="fas fa-backspace"></i></span></div>
+        </div>
+
+        <div class="login-footer-links blue-footer">
+            <a href="#">Help Center</a>
+            <a href="#">Forgot MPIN?</a>
+        </div>
+    </div>
+
+    <div class="screen-container home-screen" id="home-screen" style="display: none;">
+
+        <div class="home-header">
+            <div class="home-header-left">
+                <img src="kit.png" alt="GCash Icon">
+                Hello!
+            </div>
+            <a href="#">HELP</a>
+        </div>
+        <div class="pay-it-win-it">
+            Pay it, Win it! <span>Tap for Promos</span>
+        </div>
+
+        <div class="top-tabs" id="top-tabs">
+            <div class="active-tab" data-tab="wallet">Wallet</div>
+            <div data-tab="save">Save</div>
+            <div data-tab="borrow">Borrow</div>
+            <div data-tab="grow">Grow</div>
+        </div>
+
+        <div class="tab-content wallet-content" id="wallet-content">
+            <div class="balance-card-container">
+                <div class="balance-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.9rem;">AVAILABLE BALANCE</span>
+                        <span style="font-size: 1.1rem; cursor: pointer;">👁</span>
+                    </div>
+                    <p class="balance-amount">Rp 0.00</p>
+                    <button>+ Cash In</button>
+                </div>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-paper-plane"></i></div>Send</div>
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-mobile-alt"></i></div>Load</div>
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-university"></i></div>Transfer</div>
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-receipt"></i></div>Bills</div>
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-piggy-bank"></i></div>Ginvest</div>
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-credit-card"></i></div>Cards</div>
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-money-check-alt"></i></div>Tap to Pay</div>
+                <div class="service-item"><div class="icon-placeholder"><i class="fas fa-bus"></i></div>Commute</div>
+            </div>
+
+            <div class="explore-header">
+                <h4>Explore the App</h4>
+                <a href="#">View All ➔</a>
+            </div>
+            <div class="explore-grid">
+                <div class="explore-item"><div class="icon-placeholder">⛨</div>Ginsure</div>
+                <div class="explore-item"><div class="icon-placeholder">⭐</div>A+ Rewards</div>
+                <div class="explore-item"><div class="icon-placeholder">🍔</div>Food Hub</div>
+                <div class="explore-item" style="position: relative;">
+                    <div class="icon-placeholder">✈️</div>
+                    <span class="promo-label">Rp 640 OFF</span>
+                    Travel
+                </div>
+                <div class="explore-item"><div class="icon-placeholder">🌳</div>GForest</div>
+                <div class="explore-item"><div class="icon-placeholder">🎁</div>GCash Go</div>
+            </div>
+            <div class="scam-banner">
+                <p style="font-weight: bold; color: red;">#GSAFEAN DA</p>
+                <p style="font-weight: bold; color: black; margin: 5px 0;">Hanya karena ada tautan, jangan diklik!</p>
+                <p style="font-size: 0.8rem; color: #555;">Itu Penipuan SMS Spoofing!</p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="save-content" style="display: none;">
+            <div class="balance-card-container">
+                <div class="balance-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.9rem;">REGULAR SAVINGS BALANCE</span>
+                        <span style="font-size: 1.1rem; cursor: pointer;">👁</span>
+                    </div>
+                    <p class="balance-amount" style="color: white;">Rp 0.00</p>
+                    <button style="color: #E03C62;">Start Saving</button>
+                </div>
+
+                <div class="tab-content" style="padding: 0 20px;">
+                    <div class="savings-item"><span style="font-size: 2rem;">+</span>Open Account</div>
+                    <div class="savings-item"><span style="font-size: 2rem;">💡</span>Learn More</div>
+
+                    <div style="background-color: #e0f7fa; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; color: black; font-size: 0.9rem; font-weight: bold;">
+                        Naik level bersama Cebuana! Hemat, masih ada untung! Earn up to 3% p.a.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="borrow-content" style="display: none;">
+             <div class="balance-card-container" style="background: linear-gradient(to bottom, #e2a7a6 10%, #FF90BB 100%); padding-bottom: 0;">
+                 <div class="balance-card" style="background: none; box-shadow: none; margin: 0 auto; color: white;">
+                     <div style="display: flex; justify-content: space-between; align-items: center;">
+                          <h2 style="font-size: 1.5rem; font-weight: bold; margin: 0;">Butuh? Pinjam dulu!</h2>
+                          <button style="color: white; background-color: #E03C62; border: 1px solid white; font-size: 0.9rem;">LEARN MORE</button>
+                     </div>
+                 </div>
+             </div>
+
+             <div style="width: 90%; max-width: 450px; background-color: white; padding: 10px; border-radius: 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); margin: 10px auto;">
+                 <p style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">Borrow from Fuse</p>
+                 <div class="services-grid" style="box-shadow: none; width: 100%;">
+                      <div class="service-item"><div class="icon-placeholder"><i class="fas fa-hand-holding-usd"></i></div>GLoan</div>
+                      <div class="service-item"><div class="icon-placeholder"><i class="fas fa-calendar-alt"></i></div>GGives</div>
+                      <div class="service-item"><div class="icon-placeholder"><i class="fas fa-mobile-alt"></i></div>Borrow Load</div>
+                      <div class="service-item"><div class="icon-placeholder"><i class="fas fa-piggy-bank"></i></div>GCredit</div>
+                 </div>
+             </div>
+
+             <div style="background-color: #f7e0e0; padding: 15px; border-radius: 10px; margin-top: 20px; width: 90%; max-width: 450px; text-align: left; color: black; font-size: 0.9rem; font-weight: bold; margin: 20px auto;">
+                 No additional documents, no collateral!
+             </div>
+        </div>
+
+        <div class="tab-content" id="grow-content" style="display: none;">
+            <div class="balance-card-container">
+                <div class="balance-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.9rem;">TOTAL INVESTMENTS</span>
+                        <span style="font-size: 1.1rem; cursor: pointer;">👁</span>
+                    </div>
+                    <p class="balance-amount" style="color: white;">Rp 0.00</p>
+                    <span style="font-size: 0.8rem;">As of October 8, 2025</span>
+                    <button style="color: #E03C62;">Invest</button>
+                </div>
+
+                 <div class="tab-content" style="padding: 0 20px; text-align: left;">
+                     <p style="font-size: 0.9rem; color: #555; margin-bottom: 15px;">To see your most updated balances, please check each service.</p>
+                 </div>
+            </div>
+             <div class="services-grid">
+                  <div class="service-item"><div class="icon-placeholder"><i class="fas fa-dollar-sign"></i></div>GFunds</div>
+                  <div class="service-item"><div class="icon-placeholder"><i class="fas fa-chart-line"></i></div>GStocks PH</div>
+                  <div class="service-item"><div class="icon-placeholder"><i class="fab fa-bitcoin"></i></div>GCrypto</div>
+                  <div class="service-item"><div class="icon-placeholder" style="position: relative;"><i class="fas fa-certificate"></i><span class="promo-label" style="top: -5px; right: 5px;">New</span></div>GBonds</div>
+             </div>
+        </div>
+
+    </div>
+
+    <div class="screen-container qr-reader-screen" id="qr-reader-screen" style="display: none;">
+        <div class="qr-header">
+            <span>QR Reader</span>
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="qr-box">
+             (QR Scanner Area)
+        </div>
+        <div class="qr-actions">
+              <div class="qr-action-item"><i class="fas fa-qrcode"></i>Generate QR</div>
+              <div class="qr-action-item"><i class="fas fa-cloud-upload-alt"></i>Upload QR</div>
+        </div>
+        <div class="pay-abroad-box">
+              <i class="fas fa-hand-holding-usd"></i> Pay abroad with <img src="alipay_logo_placeholder.png" alt="Alipay"> | Alipay<i class="fas fa-plus"></i>
+        </div>
+        <div class="country-flags">
+              <img src="japan_flag_placeholder.png" alt="Japan">
+              <img src="korea_flag_placeholder.png" alt="South Korea">
+              <img src="italy_flag_placeholder.png" alt="Italy">
+              <img src="singapore_flag_placeholder.png" alt="Singapore">
+              <img src="germany_flag_placeholder.png" alt="Germany">
+        </div>
+
+    </div>
+
+    <div class="screen-container placeholder-screen" id="inbox-screen" style="display: none;">
+        <h2>📥 Inbox</h2>
+        <p>Your messages and notifications will appear here.</p>
+        <p style="margin-top: 20px;">*Placeholder Screen*</p>
+    </div>
+
+    <div class="screen-container placeholder-screen" id="profile-screen" style="display: none;">
+        <h2>👤 Profile</h2>
+        <p>Account settings, verification, and limits here.</p>
+        <p style="margin-top: 20px;">*Placeholder Screen*</p>
+    </div>
+
+    <div class="nav-bar" id="main-nav-bar" style="display: none;">
+        <a class="nav-item active" data-target="home-screen">
+            <i class="fas fa-home"></i>
+            Home
+        </a>
+        <a class="nav-item" data-target="inbox-screen">
+            <i class="fas fa-envelope"></i>
+            Inbox
+        </a>
+        <a class="nav-item qr-button" data-target="qr-reader-screen">
+            <i class="fas fa-qrcode"></i>
+        </a>
+        <a class="nav-item" data-target="notification-screen">
+            <i class="fas fa-bell"></i>
+            Notif
+        </a>
+        <a class="nav-item" data-target="profile-screen">
+            <i class="fas fa-user-circle"></i>
+            Profile
+        </a>
+    </div>
+
+    <script>
+        // JS for Screen Switching and MPIN
+        const initialLoginScreen = document.getElementById('initial-login-screen');
+        const mpinKeypadScreen = document.getElementById('mpin-keypad-screen');
+        const homeScreen = document.getElementById('home-screen');
+        const qrReaderScreen = document.getElementById('qr-reader-screen');
+        const inboxScreen = document.getElementById('inbox-screen'); // Pwede na 'to
+        const profileScreen = document.getElementById('profile-screen'); // Pwede na 'to
+        // Note: Ipinapalagay ko na Notification screen ay placeholder din.
+        const notificationScreen = document.createElement('div');
+        notificationScreen.className = 'screen-container placeholder-screen';
+        notificationScreen.id = 'notification-screen';
+        notificationScreen.style.display = 'none';
+        notificationScreen.innerHTML = '<h2>🔔 Notifications</h2><p>Your alerts will show up here.</p><p style="margin-top: 20px;">*Placeholder Screen*</p>';
+        document.body.appendChild(notificationScreen);
+        
+        const mainNavBar = document.getElementById('main-nav-bar');
+        const navItems = document.querySelectorAll('#main-nav-bar .nav-item');
+        const mpinDots = document.getElementById('pin-dots').querySelectorAll('.dot');
+        const keypad = document.getElementById('keypad');
+        const openMpinKeypadBtn = document.getElementById('open-mpin-keypad');
+        let mpinInput = '';
+        const correctMPIN = '1234'; // Sample MPIN
+
+        // Function to hide all screens
+        function hideAllScreens() {
+            [initialLoginScreen, mpinKeypadScreen, homeScreen, qrReaderScreen, inboxScreen, notificationScreen, profileScreen].forEach(screen => {
+                if (screen) screen.style.display = 'none';
+            });
+            mainNavBar.style.display = 'none';
+        }
+
+        // --- MPIN LOGIC ---
+        openMpinKeypadBtn.addEventListener('click', () => {
+            hideAllScreens();
+            mpinKeypadScreen.style.display = 'flex';
+        });
+
+        keypad.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'SPAN' && e.target.id !== 'backspace-key') return;
+
+            const keyValue = e.target.textContent.trim();
+
+            if (keyValue >= '0' && keyValue <= '9' && mpinInput.length < 4) {
+                mpinInput += keyValue;
+            } else if (e.target.id === 'backspace-key' || (e.target.tagName === 'I' && e.target.classList.contains('fa-backspace'))) {
+                mpinInput = mpinInput.slice(0, -1);
+            }
+
+            // Update dots
+            mpinDots.forEach((dot, index) => {
+                dot.classList.toggle('filled', index < mpinInput.length);
+            });
+
+            // Check if MPIN is complete
+            if (mpinInput.length === 4) {
+                if (mpinInput === correctMPIN) {
+                    setTimeout(() => {
+                        alert('Login Successful! Welcome to GCash.');
+                        showScreen('home-screen');
+                        mpinInput = ''; // Reset MPIN
+                        mpinDots.forEach(dot => dot.classList.remove('filled'));
+                    }, 300);
+                } else {
+                    setTimeout(() => {
+                        alert('Invalid MPIN. Please try again.');
+                        mpinInput = '';
+                        mpinDots.forEach(dot => dot.classList.remove('filled'));
+                    }, 300);
+                }
+            }
+        });
+
+        // --- NAVIGATION BAR LOGIC (Dito ang major fix) ---
+        function showScreen(screenId) {
+            hideAllScreens();
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                targetScreen.style.display = 'flex';
+                // Show nav bar after successful login (i.e., when on home screen or other main screens)
+                if (screenId !== 'initial-login-screen' && screenId !== 'mpin-keypad-screen') {
+                    mainNavBar.style.display = 'flex';
+                }
+            }
+            updateNavBarActiveState(screenId);
+        }
+
+        function updateNavBarActiveState(activeScreenId) {
+            navItems.forEach(item => {
+                const target = item.getAttribute('data-target');
+                // Alisin ang '-screen' suffix para ma-match sa screen ID (e.g., home-screen -> home)
+                const targetName = target.replace('-screen', ''); 
+                const activeName = activeScreenId.replace('-screen', '');
+
+                // Tiyakin na ang tamang nav item ang magiging active
+                item.classList.remove('active');
+                if (target === activeScreenId) {
+                    item.classList.add('active');
+                } else if (item.classList.contains('qr-button') && activeScreenId === 'qr-reader-screen') {
+                    // Special case for QR button
+                    item.classList.add('active');
+                } else if (item.getAttribute('data-target') === 'notification-screen' && activeScreenId === 'notification-screen') {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+
+        // Event listeners para sa Navigation Bar
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = item.getAttribute('data-target');
+                showScreen(targetId);
+            });
+        });
+
+
+        // --- TAB SWITCHING (Wallet/Save/Borrow/Grow) ---
+        const topTabs = document.getElementById('top-tabs');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        topTabs.addEventListener('click', (e) => {
+            const targetTab = e.target.closest('div[data-tab]');
+            if (!targetTab) return;
+
+            // Update active tab style
+            document.querySelectorAll('#top-tabs div').forEach(tab => tab.classList.remove('active-tab'));
+            targetTab.classList.add('active-tab');
+
+            // Show relevant content
+            tabContents.forEach(content => content.style.display = 'none');
+            const contentId = targetTab.getAttribute('data-tab') + '-content';
+            const content = document.getElementById(contentId);
+            if (content) {
+                content.style.display = 'block';
+            }
+        });
+
+    </script>
+
+</body>
+</html>
